@@ -1,0 +1,10 @@
+com/pluxee/vector/core/InMemoryVectorStore.class
+com/pluxee/vector/core/VectorSearchQuery$Builder.class
+com/pluxee/vector/core/EmbeddingProvider.class
+com/pluxee/vector/core/VectorDocument.class
+com/pluxee/vector/core/VectorSearchResult.class
+com/pluxee/vector/core/VectorKnowledgeBase.class
+com/pluxee/vector/core/VectorStorePort.class
+com/pluxee/vector/core/HashingEmbeddingProvider.class
+com/pluxee/vector/core/VectorSearchQuery.class
+com/pluxee/vector/core/VectorKnowledgeBase$ChunkInput.class

@@ -1,0 +1,7 @@
+com/pluxee/vector/starter/VectorToolkitAutoConfiguration.class
+META-INF/spring-configuration-metadata.json
+com/pluxee/vector/starter/VectorProperties$Search.class
+com/pluxee/vector/starter/VectorProperties$Chunking.class
+com/pluxee/vector/starter/VectorProperties$Store.class
+com/pluxee/vector/starter/VectorProperties.class
+com/pluxee/vector/starter/VectorProperties$Pinecone.class

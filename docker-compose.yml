@@ -1,0 +1,10 @@
+services:
+  semantic-search-demo:
+    build:
+      context: .
+      dockerfile: examples/semantic-search-demo/Dockerfile
+    image: java-vector-toolkit-semantic-demo:local
+    container_name: java-vector-toolkit-semantic-demo
+    ports:
+      - "18084:8080"
+

@@ -1,0 +1,7 @@
+com/pluxee/vector/document/ChunkStrategy.class
+com/pluxee/vector/document/FixedSizeChunkStrategy.class
+com/pluxee/vector/document/FileSystemDocumentLoader.class
+com/pluxee/vector/document/DocumentSource.class
+com/pluxee/vector/document/SourceDocument.class
+com/pluxee/vector/document/DocumentLoader.class
+com/pluxee/vector/document/DocumentChunk.class
