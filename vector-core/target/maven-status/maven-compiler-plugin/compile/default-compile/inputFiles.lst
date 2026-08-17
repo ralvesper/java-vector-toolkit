@@ -1,8 +1,0 @@
-/home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit/vector-core/src/main/java/com/pluxee/vector/core/EmbeddingProvider.java
-/home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit/vector-core/src/main/java/com/pluxee/vector/core/HashingEmbeddingProvider.java
-/home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit/vector-core/src/main/java/com/pluxee/vector/core/InMemoryVectorStore.java
-/home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit/vector-core/src/main/java/com/pluxee/vector/core/VectorDocument.java
-/home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit/vector-core/src/main/java/com/pluxee/vector/core/VectorKnowledgeBase.java
-/home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit/vector-core/src/main/java/com/pluxee/vector/core/VectorSearchQuery.java
-/home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit/vector-core/src/main/java/com/pluxee/vector/core/VectorSearchResult.java
-/home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit/vector-core/src/main/java/com/pluxee/vector/core/VectorStorePort.java
