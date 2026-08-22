@@ -227,12 +227,30 @@ Beans auto-configurados pelo starter:
 - `make compose-down`: derruba stack do compose.
 - `make compose-logs`: logs via compose.
 - `make smoke`: valida startup da app e fluxo basico de indexacao/busca via API.
+- `make test-integration`: roda o teste de integracao real com Pinecone (requer credenciais; sem elas, o teste e ignorado).
 
 ## Pinecone
 
 O adapter `vector-pinecone` implementa `VectorStorePort` e pode substituir `InMemoryVectorStore` por configuracao de beans no projeto consumidor.
 
 Na POC atual, o exemplo REST sobe com store em memoria por default.
+
+### Teste de integracao real com Pinecone
+
+O teste `PineconeLiveIntegrationTest` (modulo `vector-pinecone`) executa indexacao, busca, filtro por metadata e remocao contra um indice real. Ele so roda quando as variaveis de ambiente abaixo estao definidas; caso contrario, e simplesmente ignorado:
+
+```bash
+export PINECONE_API_KEY="<seu-token>"
+export PINECONE_HOST="https://<index-host>.svc.<region>.pinecone.io"
+export PINECONE_DIMENSION="1536"  # opcional, default 1536; deve bater com a dimensao do indice
+make test-integration
+```
+
+Cada execucao usa um namespace proprio (`it-<uuid>`) que e limpo ao final do teste.
+
+### Ordenacao dos resultados
+
+O Pinecone serverless pode retornar os `matches` fora de ordem de score (observado em indice real com poucos vetores). O adapter `PineconeVectorStore` ordena os resultados por score decrescente antes de devolver, garantindo que `VectorSearchResult` venha sempre ranqueado.
 
 ### Consultar dados diretamente no Pinecone (curl)
 

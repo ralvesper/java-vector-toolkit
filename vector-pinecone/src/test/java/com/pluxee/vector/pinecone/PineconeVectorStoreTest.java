@@ -112,6 +112,44 @@ class PineconeVectorStoreTest {
     }
 
     @Test
+    void shouldSortMatchesByScoreDescending() {
+        wireMockServer.stubFor(post(urlEqualTo("/query"))
+                .willReturn(aResponse().withStatus(200).withBody("""
+                        {
+                          "matches": [
+                            {
+                              "id": "vec-low",
+                              "score": 0.1,
+                              "metadata": { "documentId": "doc-low", "content": "baixa relevancia" }
+                            },
+                            {
+                              "id": "vec-high",
+                              "score": 0.9,
+                              "metadata": { "documentId": "doc-high", "content": "alta relevancia" }
+                            }
+                          ]
+                        }
+                        """)));
+
+        PineconeVectorStore store = new PineconeVectorStore(
+                new PineconeClientConfig("test-key", wireMockServer.baseUrl())
+        );
+
+        List<com.pluxee.vector.core.VectorSearchResult> results = store.search(
+                VectorSearchQuery.builder()
+                        .dataset("payments")
+                        .query("consulta")
+                        .topK(2)
+                        .build(),
+                new float[]{0.1f, 0.2f}
+        );
+
+        assertEquals(2, results.size());
+        assertEquals("doc-high", results.get(0).documentId());
+        assertEquals("doc-low", results.get(1).documentId());
+    }
+
+    @Test
     void shouldThrowWhenPineconeReturnsClientError() {
         wireMockServer.stubFor(post(urlEqualTo("/vectors/upsert"))
                 .willReturn(aResponse().withStatus(400).withBody("invalid payload")));

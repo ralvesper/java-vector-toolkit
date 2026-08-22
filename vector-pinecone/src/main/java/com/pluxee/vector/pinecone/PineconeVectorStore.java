@@ -76,6 +76,7 @@ public class PineconeVectorStore implements VectorStorePort {
                         metadata
                 ));
             }
+            results.sort((a, b) -> Double.compare(b.score(), a.score()));
             return results;
         } catch (IOException e) {
             throw new IllegalStateException("unable to parse Pinecone query response", e);

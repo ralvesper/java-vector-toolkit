@@ -6,10 +6,13 @@ EXTERNAL_PORT=18084
 INTERNAL_PORT=8080
 BASE_URL=http://localhost:$(EXTERNAL_PORT)
 
-.PHONY: test build docker-build docker-run docker-stop docker-logs compose-up compose-down compose-logs smoke
+.PHONY: test test-integration build docker-build docker-run docker-stop docker-logs compose-up compose-down compose-logs smoke
 
 test:
 	mvn -q test
+
+test-integration:
+	mvn -q test -pl vector-pinecone -Dtest=PineconeLiveIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false
 
 build:
 	mvn -q -pl $(APP_MODULE) -am clean package -DskipTests
