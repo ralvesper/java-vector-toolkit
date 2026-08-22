@@ -19,6 +19,7 @@
         <module>vector-spring-boot-starter</module>
         <module>examples/semantic-search-demo</module>
         <module>examples/source-code-search-demo</module>
+        <module>examples/pluxee-issues-search-demo</module>
     </modules>
 
     <properties>

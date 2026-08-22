@@ -22,6 +22,7 @@ Este projeto demonstra como encapsular responsabilidades de vetor em um toolkit 
 - `vector-spring-boot-starter`: auto-configuracao Spring Boot.
 - `examples/semantic-search-demo`: API REST de demonstracao.
 - `examples/source-code-search-demo`: exemplo CLI para busca em informacoes de codigo.
+- `examples/pluxee-issues-search-demo`: CLI de busca semantica sobre os markdowns do repo `pluxee-issues` (embeddings Gemini/OpenAI com fallback hashing).
 
 ## Requisitos
 
@@ -154,6 +155,33 @@ cd /home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit
 mvn -pl examples/source-code-search-demo exec:java
 ```
 
+## Busca semantica no pluxee-issues (CLI)
+
+Indexa todos os `.md` do repo `pluxee-issues` (`dados/<TICKET>/*.md` + `issues.md`), chunking 800/100, e responde consultas com metadata `[ticket] arquivo`:
+
+```bash
+cd /home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit
+
+# consulta unica
+mvn -pl examples/pluxee-issues-search-demo exec:java \
+  -Dexec.args="--repo ../core-backoffice/pluxee-issues --query \"sua pergunta\" --topk 5"
+
+# modo interativo (consulta> ; 'sair' encerra)
+mvn -pl examples/pluxee-issues-search-demo exec:java --repo ../core-backoffice/pluxee-issues
+```
+
+Embeddings (em ordem de prioridade):
+
+1. `GEMINI_API_KEY` definida: `gemini-embedding-001` com `outputDimensionality=1536` (recomendado; free tier 100 req/min, o provider faz backoff automatico em 429)
+2. `OPENAI_API_KEY` definida: `text-embedding-3-small`
+3. Sem chave: `HashingEmbeddingProvider` (matching lexical aproximado, sem semantica real)
+
+Para forcar um provider: `EMBEDDINGS_PROVIDER=openai|hashing`.
+
+Store: in-memory por default (reindexa a cada execucao, ~35 docs / ~260 chunks). Com `ISSUES_STORE=pinecone` (+ `PINECONE_API_KEY`/`PINECONE_HOST`) persiste no indice real e limpa o namespace `pluxee-issues` antes de reindexar. Veja [Criar um indice no Pinecone](#criar-um-indice-no-pinecone) para provisionar o indice.
+
+Observacao: a chave `OPENAI_API_KEY` atual esta invalida (401); use Gemini ou defina uma chave OpenAI valida.
+
 ## Configuracao minima
 
 ```yaml
@@ -235,6 +263,35 @@ O adapter `vector-pinecone` implementa `VectorStorePort` e pode substituir `InMe
 
 Na POC atual, o exemplo REST sobe com store em memoria por default.
 
+### Criar um indice no Pinecone
+
+O toolkit espera indice com `dimension: 1536` e `metric: cosine` (compativel com `text-embedding-3-small`, `gemini-embedding-001` reduzido a 1536 dims e o fallback `HashingEmbeddingProvider(1536)`).
+
+```bash
+export PINECONE_API_KEY="<seu-token>"
+
+# criar (serverless)
+curl -X POST "https://api.pinecone.io/indexes" \
+  -H "Api-Key: $PINECONE_API_KEY" \
+  -H "X-Pinecone-API-Version: 2025-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "java-vector-toolkit",
+    "dimension": 1536,
+    "metric": "cosine",
+    "spec": {"serverless": {"cloud": "aws", "region": "us-east-1"}}
+  }'
+
+# aguardar status.state == "Ready" e copiar o campo "host"
+curl -s "https://api.pinecone.io/indexes/java-vector-toolkit" \
+  -H "Api-Key: $PINECONE_API_KEY" \
+  -H "X-Pinecone-API-Version: 2025-01"
+
+export PINECONE_HOST="https://<host-do-indice>"
+```
+
+Namespaces sao criados no primeiro upsert; nao precisam ser criados manualmente.
+
 ### Teste de integracao real com Pinecone
 
 O teste `PineconeLiveIntegrationTest` (modulo `vector-pinecone`) executa indexacao, busca, filtro por metadata e remocao contra um indice real. Ele so roda quando as variaveis de ambiente abaixo estao definidas; caso contrario, e simplesmente ignorado:
@@ -312,6 +369,7 @@ Observacao: para teste funcional rapido do toolkit, prefira primeiro os endpoint
 ## Documentacao adicional
 
 - Comandos uteis: `docs/comandos-uteis.md`
+- Arquitetura de indices/namespaces: `docs/arquitetura-indices.md`
 - Status de aderencia ao PRD: `docs/prd-checklist-status.md`
 - Collection Postman: `../plx-docs/collections/java-vector-toolkit-semantic-search.postman_collection.json`
 - Environments Postman: `../plx-docs/collections/java-vector-toolkit-local.postman_environment.json` e `../plx-docs/collections/java-vector-toolkit-docker.postman_environment.json`
