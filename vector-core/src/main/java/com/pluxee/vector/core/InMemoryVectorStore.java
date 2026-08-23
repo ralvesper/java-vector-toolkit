@@ -18,6 +18,10 @@ public class InMemoryVectorStore implements VectorStorePort {
         }
     }
 
+    public java.util.Optional<VectorDocument> findById(String vectorId) {
+        return java.util.Optional.ofNullable(data.get(vectorId));
+    }
+
     @Override
     public List<VectorSearchResult> search(VectorSearchQuery query, float[] queryEmbedding) {
         return data.values().stream()

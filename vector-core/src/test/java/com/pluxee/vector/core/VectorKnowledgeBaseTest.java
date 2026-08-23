@@ -7,6 +7,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class VectorKnowledgeBaseTest {
 
@@ -43,6 +44,23 @@ class VectorKnowledgeBaseTest {
 
         assertFalse(results.isEmpty());
         assertEquals("rabbitmq.md", results.getFirst().documentId());
+    }
+
+    @Test
+    void shouldGenerateDeterministicVectorIdsPerChunk() {
+        InMemoryVectorStore store = new InMemoryVectorStore();
+        VectorKnowledgeBase knowledgeBase = new VectorKnowledgeBase(
+                new HashingEmbeddingProvider(128),
+                store
+        );
+
+        knowledgeBase.index("estudo", "doc.md", List.of(
+                new VectorKnowledgeBase.ChunkInput("primeiro chunk", Map.of()),
+                new VectorKnowledgeBase.ChunkInput("segundo chunk", Map.of())
+        ));
+
+        assertTrue(store.findById("estudo-doc.md-0").isPresent());
+        assertTrue(store.findById("estudo-doc.md-1").isPresent());
     }
 }
 

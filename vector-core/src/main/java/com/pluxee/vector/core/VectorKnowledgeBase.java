@@ -3,7 +3,6 @@ package com.pluxee.vector.core;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class VectorKnowledgeBase {
 
@@ -17,9 +16,10 @@ public class VectorKnowledgeBase {
 
     public void index(String dataset, String documentId, List<ChunkInput> chunks) {
         List<VectorDocument> documents = new ArrayList<>();
-        for (ChunkInput chunk : chunks) {
+        for (int i = 0; i < chunks.size(); i++) {
+            ChunkInput chunk = chunks.get(i);
             documents.add(new VectorDocument(
-                    UUID.randomUUID().toString(),
+                    dataset + "-" + documentId + "-" + i,
                     documentId,
                     dataset,
                     chunk.content(),
