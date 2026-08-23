@@ -29,6 +29,11 @@
             <artifactId>vector-rag</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.pluxee.ai</groupId>
+            <artifactId>vector-pinecone</artifactId>
+            <version>${project.version}</version>
+        </dependency>
             <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

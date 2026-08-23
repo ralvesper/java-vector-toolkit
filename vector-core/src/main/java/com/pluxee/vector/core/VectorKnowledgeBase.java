@@ -42,6 +42,10 @@ public class VectorKnowledgeBase {
         vectorStore.deleteByDocumentId(dataset, documentId);
     }
 
+    public void deleteByDataset(String dataset) {
+        vectorStore.deleteByDataset(dataset);
+    }
+
     public void reindex(String dataset, String documentId, List<ChunkInput> chunks) {
         deleteByDocumentId(dataset, documentId);
         index(dataset, documentId, chunks);

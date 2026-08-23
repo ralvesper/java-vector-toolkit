@@ -9,9 +9,11 @@ import com.pluxee.vector.core.VectorStorePort;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +27,7 @@ public class PineconeVectorStore implements VectorStorePort {
     private Integer indexDimension;
 
     public PineconeVectorStore(PineconeClientConfig config) {
-        this(config, HttpClient.newHttpClient(), new ObjectMapper());
+        this(config, HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build(), new ObjectMapper());
     }
 
     public PineconeVectorStore(PineconeClientConfig config, HttpClient httpClient, ObjectMapper objectMapper) {
@@ -115,6 +117,82 @@ public class PineconeVectorStore implements VectorStorePort {
                 "namespace", dataset,
                 "deleteAll", true
         ));
+    }
+
+    public List<String> listVectorIds(String dataset) {
+        List<String> ids = new ArrayList<>();
+        String paginationToken = null;
+        do {
+            StringBuilder path = new StringBuilder("/vectors/list?limit=100&namespace=").append(urlEncode(dataset));
+            if (paginationToken != null) {
+                path.append("&paginationToken=").append(urlEncode(paginationToken));
+            }
+            String response = sendGet(path.toString());
+            try {
+                Map<String, Object> parsed = objectMapper.readValue(response, new TypeReference<>() {
+                });
+                List<Map<String, Object>> vectors = (List<Map<String, Object>>) parsed.getOrDefault("vectors", List.of());
+                for (Map<String, Object> vector : vectors) {
+                    ids.add((String) vector.get("id"));
+                }
+                Map<String, Object> pagination = (Map<String, Object>) parsed.get("pagination");
+                paginationToken = pagination == null ? null : (String) pagination.get("next");
+            } catch (IOException e) {
+                throw new IllegalStateException("unable to parse Pinecone list response", e);
+            }
+        } while (paginationToken != null);
+        return ids;
+    }
+
+    public Map<String, Map<String, Object>> fetchMetadata(String dataset, List<String> ids) {
+        Map<String, Map<String, Object>> metadataById = new HashMap<>();
+        for (int start = 0; start < ids.size(); start += 100) {
+            List<String> batch = ids.subList(start, Math.min(start + 100, ids.size()));
+            StringBuilder path = new StringBuilder("/vectors/fetch?namespace=").append(urlEncode(dataset));
+            for (String id : batch) {
+                path.append("&ids=").append(urlEncode(id));
+            }
+            String response = sendGet(path.toString());
+            try {
+                Map<String, Object> parsed = objectMapper.readValue(response, new TypeReference<>() {
+                });
+                Map<String, Object> vectors = (Map<String, Object>) parsed.getOrDefault("vectors", Map.of());
+                for (Map.Entry<String, Object> entry : vectors.entrySet()) {
+                    Map<String, Object> vector = (Map<String, Object>) entry.getValue();
+                    Map<String, Object> metadata = (Map<String, Object>) vector.getOrDefault("metadata", Map.of());
+                    metadataById.put(entry.getKey(), metadata);
+                }
+            } catch (IOException e) {
+                throw new IllegalStateException("unable to parse Pinecone fetch response", e);
+            }
+        }
+        return metadataById;
+    }
+
+    private String urlEncode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    private String sendGet(String pathWithQuery) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(config.host() + pathWithQuery))
+                    .header("Api-Key", config.apiKey())
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 300) {
+                throw new IllegalStateException("Pinecone request failed with status "
+                        + response.statusCode() + ": " + response.body());
+            }
+            return response.body();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("unable to call Pinecone API", e);
+        } catch (IOException e) {
+            throw new IllegalStateException("unable to call Pinecone API", e);
+        }
     }
 
     public boolean healthCheck() {
