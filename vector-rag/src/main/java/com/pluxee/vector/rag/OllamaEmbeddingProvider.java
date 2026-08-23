@@ -15,9 +15,11 @@ import java.util.Map;
 public class OllamaEmbeddingProvider implements EmbeddingProvider {
 
     public static final String DEFAULT_BASE_URL = OllamaLlmClient.DEFAULT_BASE_URL;
+    public static final String DEFAULT_MODEL = "nomic-embed-text";
 
     private final String baseUrl;
     private final String model;
+    private final String apiKey;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
@@ -26,8 +28,13 @@ public class OllamaEmbeddingProvider implements EmbeddingProvider {
     }
 
     public OllamaEmbeddingProvider(String baseUrl, String model) {
-        this.baseUrl = baseUrl;
+        this(baseUrl, model, null);
+    }
+
+    public OllamaEmbeddingProvider(String baseUrl, String model, String apiKey) {
+        this.baseUrl = normalize(baseUrl);
         this.model = model;
+        this.apiKey = apiKey;
         this.httpClient = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
     }
@@ -35,16 +42,18 @@ public class OllamaEmbeddingProvider implements EmbeddingProvider {
     @Override
     public float[] embed(String text) {
         try {
-            HttpRequest request = HttpRequest.newBuilder()
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + "/api/embed"))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(Map.of(
                             "model", model,
                             "input", text
-                    ))))
-                    .build();
+                    ))));
+            if (apiKey != null && !apiKey.isBlank()) {
+                builder.header("Authorization", "Bearer " + apiKey);
+            }
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 300) {
                 throw new IllegalStateException("Ollama embedding request failed with status "
                         + response.statusCode() + ": " + response.body());
@@ -67,5 +76,9 @@ public class OllamaEmbeddingProvider implements EmbeddingProvider {
         } catch (IOException e) {
             throw new IllegalStateException("unable to call Ollama embedding API", e);
         }
+    }
+
+    private static String normalize(String baseUrl) {
+        return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 }
