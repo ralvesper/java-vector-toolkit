@@ -36,6 +36,27 @@ public class InMemoryVectorStore implements VectorStorePort {
     }
 
     @Override
+    public List<VectorSearchResult> findSimilarById(String dataset, String vectorId, int topK) {
+        VectorDocument origin = data.get(vectorId);
+        if (origin == null || !origin.dataset().equals(dataset)) {
+            throw new IllegalArgumentException("vector not found in dataset: " + vectorId);
+        }
+        return data.values().stream()
+                .filter(doc -> doc.dataset().equals(dataset))
+                .filter(doc -> !doc.id().equals(vectorId))
+                .map(doc -> new VectorSearchResult(
+                        cosine(origin.embedding(), doc.embedding()),
+                        doc.id(),
+                        doc.documentId(),
+                        doc.content(),
+                        doc.metadata()
+                ))
+                .sorted(Comparator.comparingDouble(VectorSearchResult::score).reversed())
+                .limit(topK)
+                .toList();
+    }
+
+    @Override
     public void deleteByDocumentId(String dataset, String documentId) {
         List<String> keysToRemove = new ArrayList<>();
         for (Map.Entry<String, VectorDocument> entry : data.entrySet()) {

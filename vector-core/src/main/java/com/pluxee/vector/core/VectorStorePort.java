@@ -8,6 +8,8 @@ public interface VectorStorePort {
 
     List<VectorSearchResult> search(VectorSearchQuery query, float[] queryEmbedding);
 
+    List<VectorSearchResult> findSimilarById(String dataset, String vectorId, int topK);
+
     void deleteByDocumentId(String dataset, String documentId);
 
     void deleteByDataset(String dataset);

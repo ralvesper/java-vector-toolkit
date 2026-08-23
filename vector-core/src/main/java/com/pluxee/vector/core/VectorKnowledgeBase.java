@@ -34,6 +34,10 @@ public class VectorKnowledgeBase {
         return vectorStore.search(query, embeddingProvider.embed(query.query()));
     }
 
+    public List<VectorSearchResult> findSimilar(String dataset, String vectorId, int topK) {
+        return vectorStore.findSimilarById(dataset, vectorId, topK);
+    }
+
     public void deleteByDocumentId(String dataset, String documentId) {
         vectorStore.deleteByDocumentId(dataset, documentId);
     }

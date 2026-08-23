@@ -9,10 +9,12 @@ import com.pluxee.vector.rag.RagResponse;
 import com.pluxee.vector.rag.RagService;
 import com.pluxee.vector.starter.VectorProperties;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -80,6 +82,22 @@ public class VectorController {
     @PostMapping("/ask")
     public RagResponse ask(@RequestBody AskRequest request) {
         return ragService.ask(RagRequest.of(request.dataset(), request.question()));
+    }
+
+    @GetMapping("/similar/{dataset}/{vectorId}")
+    public List<SearchItem> findSimilar(
+            @PathVariable("dataset") String dataset,
+            @PathVariable("vectorId") String vectorId,
+            @RequestParam(name = "topK", defaultValue = "5") int topK
+    ) {
+        return knowledgeBase.findSimilar(dataset, vectorId, topK).stream()
+                .map(result -> new SearchItem(
+                        result.score(),
+                        result.documentId(),
+                        result.content(),
+                        result.metadata()
+                ))
+                .toList();
     }
 
     @DeleteMapping("/documents/{dataset}/{documentId}")

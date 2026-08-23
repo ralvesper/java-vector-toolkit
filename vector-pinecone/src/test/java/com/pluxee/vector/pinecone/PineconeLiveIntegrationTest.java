@@ -90,6 +90,10 @@ class PineconeLiveIntegrationTest {
         });
         assertEquals("kubernetes.md", query(filterQuery("kubernetes"), "Kubernetes orquestra containers").getFirst().documentId());
 
+        List<VectorSearchResult> similar = store.findSimilarById(DATASET, DATASET + "-rabbitmq", 10);
+        assertEquals(1, similar.size());
+        assertEquals("kubernetes.md", similar.getFirst().documentId());
+
         store.deleteByDocumentId(DATASET, "rabbitmq.md");
         List<VectorSearchResult> remaining = awaitResults("delete by documentId applied", () -> {
             List<VectorSearchResult> results = query(allQuery());

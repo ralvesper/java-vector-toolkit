@@ -83,6 +83,11 @@ class VectorToolkitAutoConfigurationTest {
             }
 
             @Override
+            public List<VectorSearchResult> findSimilarById(String dataset, String vectorId, int topK) {
+                return List.of();
+            }
+
+            @Override
             public void deleteByDocumentId(String dataset, String documentId) {
             }
 

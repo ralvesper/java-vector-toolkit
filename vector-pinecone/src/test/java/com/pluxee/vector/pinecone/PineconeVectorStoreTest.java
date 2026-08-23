@@ -150,6 +150,41 @@ class PineconeVectorStoreTest {
     }
 
     @Test
+    void shouldFindSimilarByIdExcludingSelf() {
+        wireMockServer.stubFor(post(urlEqualTo("/query"))
+                .willReturn(aResponse().withStatus(200).withBody("""
+                        {
+                          "matches": [
+                            {
+                              "id": "vec-origin",
+                              "score": 1.0,
+                              "metadata": { "documentId": "doc-origin", "content": "vetor de origem" }
+                            },
+                            {
+                              "id": "vec-similar",
+                              "score": 0.87,
+                              "metadata": { "documentId": "doc-similar", "content": "conteudo similar" }
+                            }
+                          ]
+                        }
+                        """)));
+
+        PineconeVectorStore store = new PineconeVectorStore(
+                new PineconeClientConfig("test-key", wireMockServer.baseUrl())
+        );
+
+        List<com.pluxee.vector.core.VectorSearchResult> results = store.findSimilarById("payments", "vec-origin", 5);
+
+        assertEquals(1, results.size());
+        assertEquals("doc-similar", results.getFirst().documentId());
+
+        wireMockServer.verify(postRequestedFor(urlEqualTo("/query"))
+                .withRequestBody(matchingJsonPath("$.id", equalTo("vec-origin")))
+                .withRequestBody(matchingJsonPath("$.namespace", equalTo("payments")))
+                .withRequestBody(matchingJsonPath("$.topK", equalTo("6"))));
+    }
+
+    @Test
     void shouldThrowWhenPineconeReturnsClientError() {
         wireMockServer.stubFor(post(urlEqualTo("/vectors/upsert"))
                 .willReturn(aResponse().withStatus(400).withBody("invalid payload")));

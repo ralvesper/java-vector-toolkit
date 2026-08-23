@@ -59,8 +59,23 @@ public class PineconeVectorStore implements VectorStorePort {
         if (!query.filters().isEmpty()) {
             payload.put("filter", query.filters());
         }
+        return parseMatches(send("/query", payload));
+    }
 
-        String response = send("/query", payload);
+    @Override
+    public List<VectorSearchResult> findSimilarById(String dataset, String vectorId, int topK) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", vectorId);
+        payload.put("namespace", dataset);
+        payload.put("topK", topK + 1);
+        payload.put("includeMetadata", true);
+
+        List<VectorSearchResult> results = parseMatches(send("/query", payload));
+        results.removeIf(result -> result.id().equals(vectorId));
+        return results.size() > topK ? new ArrayList<>(results.subList(0, topK)) : results;
+    }
+
+    private List<VectorSearchResult> parseMatches(String response) {
         try {
             Map<String, Object> parsed = objectMapper.readValue(response, new TypeReference<>() {
             });

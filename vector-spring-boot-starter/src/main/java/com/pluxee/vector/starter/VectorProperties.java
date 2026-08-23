@@ -9,6 +9,8 @@ public class VectorProperties {
     private final Pinecone pinecone = new Pinecone();
     private final Chunking chunking = new Chunking();
     private final Search search = new Search();
+    private final Llm llm = new Llm();
+    private final Embedding embedding = new Embedding();
 
     public Store getStore() {
         return store;
@@ -24,6 +26,14 @@ public class VectorProperties {
 
     public Search getSearch() {
         return search;
+    }
+
+    public Llm getLlm() {
+        return llm;
+    }
+
+    public Embedding getEmbedding() {
+        return embedding;
     }
 
     public static class Store {
@@ -89,6 +99,75 @@ public class VectorProperties {
 
         public void setTopK(int topK) {
             this.topK = topK;
+        }
+    }
+
+    public static class Llm {
+        private String provider = "none";
+        private String apiKey;
+        private String model;
+        private String baseUrl;
+
+        public String getProvider() {
+            return provider;
+        }
+
+        public void setProvider(String provider) {
+            this.provider = provider;
+        }
+
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        public void setApiKey(String apiKey) {
+            this.apiKey = apiKey;
+        }
+
+        public String getModel() {
+            return model;
+        }
+
+        public void setModel(String model) {
+            this.model = model;
+        }
+
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        public void setBaseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+        }
+    }
+
+    public static class Embedding {
+        private String provider = "hashing";
+        private String model;
+        private String baseUrl;
+
+        public String getProvider() {
+            return provider;
+        }
+
+        public void setProvider(String provider) {
+            this.provider = provider;
+        }
+
+        public String getModel() {
+            return model;
+        }
+
+        public void setModel(String model) {
+            this.model = model;
+        }
+
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        public void setBaseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
         }
     }
 }
