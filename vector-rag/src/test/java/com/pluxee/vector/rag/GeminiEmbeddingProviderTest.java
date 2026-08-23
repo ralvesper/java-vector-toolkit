@@ -1,4 +1,4 @@
-package com.pluxee.vector.examples.issues;
+package com.pluxee.vector.rag;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.AfterEach;

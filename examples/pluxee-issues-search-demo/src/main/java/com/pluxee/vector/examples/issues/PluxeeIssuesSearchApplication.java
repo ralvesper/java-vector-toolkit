@@ -9,7 +9,9 @@ import com.pluxee.vector.core.VectorSearchResult;
 import com.pluxee.vector.document.FixedSizeChunkStrategy;
 import com.pluxee.vector.pinecone.PineconeClientConfig;
 import com.pluxee.vector.pinecone.PineconeVectorStore;
+import com.pluxee.vector.rag.GeminiEmbeddingProvider;
 import com.pluxee.vector.rag.OllamaEmbeddingProvider;
+import com.pluxee.vector.rag.OpenAiEmbeddingProvider;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

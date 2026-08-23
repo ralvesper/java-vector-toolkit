@@ -1,4 +1,4 @@
-package com.pluxee.vector.examples.issues;
+package com.pluxee.vector.rag;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
