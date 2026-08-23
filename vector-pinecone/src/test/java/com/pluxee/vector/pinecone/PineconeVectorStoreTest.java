@@ -44,8 +44,7 @@ class PineconeVectorStoreTest {
         wireMockServer.stubFor(post(urlEqualTo("/vectors/upsert"))
                 .willReturn(aResponse().withStatus(200).withBody("{}")));
 
-        wireMockServer.stubFor(post(urlEqualTo("/query"))
-                .willReturn(aResponse().withStatus(200).withBody("""
+        wireMockServer.stubFor(post(urlEqualTo("/query"))                .willReturn(aResponse().withStatus(200).withBody("""
                         {
                           "matches": [
                             {
@@ -230,6 +229,58 @@ class PineconeVectorStoreTest {
 
         assertTrue(exception.getMessage().contains("status 500"));
         assertTrue(exception.getMessage().contains("internal error"));
+    }
+
+    @Test
+    void shouldRejectVectorsWithDimensionDifferentFromIndex() {
+        wireMockServer.stubFor(post(urlEqualTo("/describe_index_stats"))
+                .willReturn(aResponse().withStatus(200).withBody("""
+                        { "dimension": 1536, "namespaces": {}, "totalVectorCount": 0 }
+                        """)));
+
+        PineconeVectorStore store = new PineconeVectorStore(
+                new PineconeClientConfig("test-key", wireMockServer.baseUrl())
+        );
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                store.upsert(List.of(new VectorDocument(
+                        "vec-1",
+                        "doc-1",
+                        "payments",
+                        "conteudo",
+                        Map.of(),
+                        new float[]{0.1f, 0.2f, 0.3f}
+                )))
+        );
+
+        assertTrue(exception.getMessage().contains("dimension mismatch"));
+        assertTrue(exception.getMessage().contains("3"));
+        assertTrue(exception.getMessage().contains("1536"));
+    }
+
+    @Test
+    void shouldAcceptVectorsWithMatchingDimension() {
+        wireMockServer.stubFor(post(urlEqualTo("/describe_index_stats"))
+                .willReturn(aResponse().withStatus(200).withBody("""
+                        { "dimension": 3, "namespaces": {}, "totalVectorCount": 0 }
+                        """)));
+        wireMockServer.stubFor(post(urlEqualTo("/vectors/upsert"))
+                .willReturn(aResponse().withStatus(200).withBody("{}")));
+
+        PineconeVectorStore store = new PineconeVectorStore(
+                new PineconeClientConfig("test-key", wireMockServer.baseUrl())
+        );
+
+        store.upsert(List.of(new VectorDocument(
+                "vec-1",
+                "doc-1",
+                "payments",
+                "conteudo",
+                Map.of(),
+                new float[]{0.1f, 0.2f, 0.3f}
+        )));
+
+        wireMockServer.verify(1, postRequestedFor(urlEqualTo("/vectors/upsert")));
     }
 }
 

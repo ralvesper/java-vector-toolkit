@@ -22,6 +22,7 @@ public class PineconeVectorStore implements VectorStorePort {
     private final PineconeClientConfig config;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private Integer indexDimension;
 
     public PineconeVectorStore(PineconeClientConfig config) {
         this(config, HttpClient.newHttpClient(), new ObjectMapper());
@@ -37,6 +38,7 @@ public class PineconeVectorStore implements VectorStorePort {
     public void upsert(List<VectorDocument> documents) {
         List<Map<String, Object>> vectors = new ArrayList<>();
         for (VectorDocument document : documents) {
+            requireCompatibleDimension(document.embedding());
             Map<String, Object> metadata = new HashMap<>(document.metadata());
             metadata.put("documentId", document.documentId());
             metadata.put("content", document.content());
@@ -51,6 +53,7 @@ public class PineconeVectorStore implements VectorStorePort {
 
     @Override
     public List<VectorSearchResult> search(VectorSearchQuery query, float[] queryEmbedding) {
+        requireCompatibleDimension(queryEmbedding);
         Map<String, Object> payload = new HashMap<>();
         payload.put("vector", queryEmbedding);
         payload.put("topK", query.topK());
@@ -117,6 +120,31 @@ public class PineconeVectorStore implements VectorStorePort {
     public boolean healthCheck() {
         String response = send("/describe_index_stats", Map.of());
         return response != null && !response.isBlank();
+    }
+
+    private void requireCompatibleDimension(float[] vector) {
+        if (indexDimension == null) {
+            indexDimension = fetchIndexDimension();
+        }
+        if (indexDimension != null && vector.length != indexDimension) {
+            throw new IllegalStateException("embedding dimension mismatch: vectors have " + vector.length
+                    + " dims but the Pinecone index has " + indexDimension
+                    + "; use an embedder with matching dimension or an index with matching dimension");
+        }
+    }
+
+    private Integer fetchIndexDimension() {
+        try {
+            String response = send("/describe_index_stats", Map.of());
+            Map<String, Object> parsed = objectMapper.readValue(response, new TypeReference<>() {
+            });
+            Object dimension = parsed.get("dimension");
+            return dimension instanceof Number number ? number.intValue() : null;
+        } catch (IOException e) {
+            return null;
+        } catch (IllegalStateException e) {
+            return null;
+        }
     }
 
     private String send(String endpoint, Map<String, Object> payload) {
