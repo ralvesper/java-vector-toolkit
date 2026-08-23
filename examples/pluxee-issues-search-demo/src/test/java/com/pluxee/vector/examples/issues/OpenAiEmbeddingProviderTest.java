@@ -72,4 +72,51 @@ class OpenAiEmbeddingProviderTest {
 
         assertTrue(exception.getMessage().contains("status 401"));
     }
+
+    @Test
+    void shouldRetryOn429WhenRetryAfterHeaderPresent() {
+        wireMockServer.stubFor(post(urlEqualTo("/embeddings"))
+                .inScenario("rate-limit")
+                .whenScenarioStateIs("Started")
+                .willReturn(aResponse()
+                        .withStatus(429)
+                        .withHeader("Retry-After", "0")
+                        .withBody("rate limited"))
+                .willSetStateTo("retried"));
+        wireMockServer.stubFor(post(urlEqualTo("/embeddings"))
+                .inScenario("rate-limit")
+                .whenScenarioStateIs("retried")
+                .willReturn(aResponse().withStatus(200).withBody("""
+                        {
+                          "data": [
+                            { "embedding": [0.5, 0.5], "index": 0 }
+                          ]
+                        }
+                        """)));
+
+        OpenAiEmbeddingProvider provider = new OpenAiEmbeddingProvider(
+                "test-key", wireMockServer.baseUrl(), "text-embedding-3-small");
+
+        float[] vector = provider.embed("conteudo");
+
+        assertEquals(2, vector.length);
+        wireMockServer.verify(2, postRequestedFor(urlEqualTo("/embeddings")));
+    }
+
+    @Test
+    void shouldFailFastOn429WithoutRetryAfterHeader() {
+        wireMockServer.stubFor(post(urlEqualTo("/embeddings"))
+                .willReturn(aResponse().withStatus(429)
+                        .withBody("{\"error\":{\"code\":\"credit_balance_exhausted\"}}")));
+
+        OpenAiEmbeddingProvider provider = new OpenAiEmbeddingProvider(
+                "test-key", wireMockServer.baseUrl(), "text-embedding-3-small");
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                provider.embed("conteudo")
+        );
+
+        assertTrue(exception.getMessage().contains("credit_balance_exhausted"));
+        wireMockServer.verify(1, postRequestedFor(urlEqualTo("/embeddings")));
+    }
 }

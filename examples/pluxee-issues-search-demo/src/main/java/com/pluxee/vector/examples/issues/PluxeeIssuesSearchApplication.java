@@ -168,13 +168,21 @@ public class PluxeeIssuesSearchApplication {
             return new OllamaEmbeddingProvider(baseUrl, model, System.getenv("OLLAMA_API_KEY"));
         }
         if ("openai".equalsIgnoreCase(provider) && hasText(System.getenv("OPENAI_API_KEY"))) {
-            return new OpenAiEmbeddingProvider(requireEnv("OPENAI_API_KEY"));
+            return new OpenAiEmbeddingProvider(
+                    requireEnv("OPENAI_API_KEY"),
+                    orDefault(System.getenv("OPENAI_BASE_URL"), OpenAiEmbeddingProvider.DEFAULT_BASE_URL),
+                    orDefault(System.getenv("OPENAI_MODEL"), OpenAiEmbeddingProvider.DEFAULT_MODEL)
+            );
         }
         if (hasText(System.getenv("GEMINI_API_KEY"))) {
             return new GeminiEmbeddingProvider(requireEnv("GEMINI_API_KEY"));
         }
         if (hasText(System.getenv("OPENAI_API_KEY"))) {
-            return new OpenAiEmbeddingProvider(requireEnv("OPENAI_API_KEY"));
+            return new OpenAiEmbeddingProvider(
+                    requireEnv("OPENAI_API_KEY"),
+                    orDefault(System.getenv("OPENAI_BASE_URL"), OpenAiEmbeddingProvider.DEFAULT_BASE_URL),
+                    orDefault(System.getenv("OPENAI_MODEL"), OpenAiEmbeddingProvider.DEFAULT_MODEL)
+            );
         }
         System.out.println("Nenhuma chave de embeddings encontrada: usando HashingEmbeddingProvider (matching lexical, sem semantica real)");
         return new HashingEmbeddingProvider(1536);
@@ -229,7 +237,7 @@ public class PluxeeIssuesSearchApplication {
             path = System.getenv("PLUXEE_ISSUES_HOME");
         }
         if (path == null || path.isBlank()) {
-            path = "../core-backoffice/pluxee-issues";
+            path = "../../core-backoffice/pluxee-issues";
         }
         Path resolved = Path.of(path).toAbsolutePath().normalize();
         if (!Files.isDirectory(resolved)) {

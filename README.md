@@ -164,10 +164,10 @@ cd /home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/java-vector-toolkit
 
 # consulta unica
 mvn -pl examples/pluxee-issues-search-demo exec:java \
-  -Dexec.args="--repo ../core-backoffice/pluxee-issues --query \"sua pergunta\" --topk 5"
+  -Dexec.args="--repo ../../core-backoffice/pluxee-issues --query \"sua pergunta\" --topk 5"
 
 # modo interativo (consulta> ; 'sair' encerra)
-mvn -pl examples/pluxee-issues-search-demo exec:java --repo ../core-backoffice/pluxee-issues
+mvn -pl examples/pluxee-issues-search-demo exec:java --repo ../../core-backoffice/pluxee-issues
 ```
 
 Embeddings (em ordem de prioridade):
@@ -368,6 +368,7 @@ Observacao: para teste funcional rapido do toolkit, prefira primeiro os endpoint
 
 ## Documentacao adicional
 
+- Guia de estudo Pinecone (iniciante): `docs/guia-estudo-pinecone.md`
 - Comandos uteis: `docs/comandos-uteis.md`
 - Arquitetura de indices/namespaces: `docs/arquitetura-indices.md`
 - Status de aderencia ao PRD: `docs/prd-checklist-status.md`
